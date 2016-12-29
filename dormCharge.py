@@ -73,7 +73,7 @@ def redcolor(text):
     start="\033[91m"
     end="\033[0m"
     return start+text+end;
-def sendone(auser,contentdict):
+def sendMail(auser,contentdict):
     """
         给一个用户发邮件
     """
