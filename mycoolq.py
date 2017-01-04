@@ -7,13 +7,16 @@ import sys,time
 import websocket
 import multiprocessing
 from multiprocessing import Manager
-
+from dormCharge import get_electricity_fee
 
 #share data using this method
 manager = Manager()
 sendinfoPool = manager.list()
 vip_dict=manager.dict()
-vip_dict["a"]=100
+vip_dict[u"a"]=u"2"
+
+
+
 
 class toQQGroup:
     def __init__(self,groupid=None):
@@ -93,39 +96,75 @@ class MyQQ():
     def __del__(self):
         print("close websocket now")
         self.ws.close()
+def readVariableVal(key):
+    if key in vip_dict:
+        msg=str(key)+"="+str(vip_dict[key])
+    else:
+        msg=str(key)+" does not exist"
+    return msg
+
+def writeVariableVal(key,value):
+    if key in vip_dict:
+        vip_dict[key]=value
+        tmpmsg="set dict:"+key+"="+str(value)+" ok!"
+    else:
+        vip_dict[key]=value
+        tmpmsg="add a new dict:"+key+"="+str(value)+" ok!"
+    return tmpmsg
+
+def getKeyValue(amsg):
+    if ":" in  amsg:
+        key,value=amsg.split(":")
+        print (key,value)
+        return key,value
+    elif "：" in message:
+        key,value=amsg.split(":")
+        print (key,value)
+        return key,value
+    else:
+        return None,None
+
 import json
-def on_message(ws, message):
-    global gmsg
-    global aaa
+def on_message(ws, message): 
+    """
+    receive message and deal with it
+
+    """
+
     message=json.loads(message)
     if "msg" in message:
         amsg=message["msg"]
-        print (amsg)
-        key=""
-        if ":" in  amsg:
-            key,value=amsg.split(":")
-            print (key,value)
-            value=int(value)
-        elif "：" in message:
-            key,value=amsg.split(":")
-            print (key,value)
-            value=int(value)
-        if key in vip_dict:
-            vip_dict[key]=value
-            tmpmsg="set dict:"+key+"="+str(value)+" ok!"
-            sendinfoPool.append(tmpmsg)
+        key,value=getKeyValue(amsg)
+        if key==None:
+            if amsg=="电费":
+                tmpmsg=get_electricity_fee()
+                sendinfoPool.append(tmpmsg)
+
+        else:
+            if "check" ==key:                       # read variable from vip_dict
+                tmpmsg=readVariableVal(value)
+                sendinfoPool.append(tmpmsg)
+            else:
+                tmpmsg=writeVariableVal(key,value)  # write value to a variable
+                sendinfoPool.append(tmpmsg)  
     else:
-        print ("wrong")
+         sendinfoPool.append("Sorry!I Got Wrong Msg!!")
 
     print ("\n")
 
 
 def checkmsgpool(qq,msgpool):
+    """
+    check out the msgpool situation, 
+    if not empty,means we have message to send
+    """
     while True:
         time.sleep(2)
         if len(msgpool):
             tmpmsg=msgpool.pop()
             qq.sendperMsg(397916230,tmpmsg)
+        else:
+            print ("empty")
 
 
 from getWSaddr import getWSaddr
@@ -151,8 +190,9 @@ if __name__ == '__main__':
 
     while True:
         time.sleep(3)
-        if vip_dict["a"]==2:
-            qq.sendperMsg(397916230,"hello 你")
-        # print gmsg,id(gmsg)
-        # print "vip list",vip_list
-        print ("vip dict",vip_dict["a"])
+        if  "a" in vip_dict:
+            if vip_dict["a"]=="2":
+                qq.sendperMsg(397916230,"hello 你")
+            # print gmsg,id(gmsg)
+            # print "vip list",vip_list
+        #print ("vip dict",str(vip_dict))

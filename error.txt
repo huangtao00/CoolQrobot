@@ -1,0 +1,14 @@
+Process Process-259:
+Traceback (most recent call last):
+  File "/usr/lib64/python2.7/multiprocessing/process.py", line 258, in _bootstrap
+    self.run()
+  File "/usr/lib64/python2.7/multiprocessing/process.py", line 114, in run
+    self._target(*self._args, **self._kwargs)
+  File "mycoolq.py", line 143, in checkmsgpool
+    
+KeyboardInterrupt
+No handlers could be found for logger "websocket"
+Traceback (most recent call last):
+  File "mycoolq.py", line 173, in <module>
+    #wslisten.run_forever()
+KeyboardInterrupt
