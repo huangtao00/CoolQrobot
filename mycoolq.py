@@ -106,18 +106,19 @@ def readVariableVal(key):
 def writeVariableVal(key,value):
     if key in vip_dict:
         vip_dict[key]=value
-        tmpmsg="set dict:"+key+"="+str(value)+" ok!"
+        tmpmsg="set dict:"+key+"="+str(value)
     else:
         vip_dict[key]=value
-        tmpmsg="add a new dict:"+key+"="+str(value)+" ok!"
+        tmpmsg="add a new dict:"+key+"="+str(value)
     return tmpmsg
 
 def getKeyValue(amsg):
+    #print "amsg",amsg
     if ":" in  amsg:
         key,value=amsg.split(":")
         print (key,value)
         return key,value
-    elif "：" in message:
+    elif u"：" in amsg:
         key,value=amsg.split(":")
         print (key,value)
         return key,value
@@ -135,9 +136,10 @@ def on_message(ws, message):
     if "msg" in message:
         amsg=message["msg"]
         key,value=getKeyValue(amsg)
-        if key==None:
-            if amsg=="电费":
+        if key==None:                               #map string to function 
+            if amsg==u"电费":
                 tmpmsg=get_electricity_fee()
+                print(tmpmsg)
                 sendinfoPool.append(tmpmsg)
 
         else:
@@ -150,7 +152,6 @@ def on_message(ws, message):
     else:
          sendinfoPool.append("Sorry!I Got Wrong Msg!!")
 
-    print ("\n")
 
 
 def checkmsgpool(qq,msgpool):
@@ -163,30 +164,35 @@ def checkmsgpool(qq,msgpool):
         if len(msgpool):
             tmpmsg=msgpool.pop()
             qq.sendperMsg(397916230,tmpmsg)
-        else:
-            print ("empty")
+
 
 
 from getWSaddr import getWSaddr
 if __name__ == '__main__':
 
     wsaddr=getWSaddr(port=25303)
-    print wsaddr
+    # print wsaddr
     ws = websocket.WebSocket()
     ws.connect(wsaddr) #run coolQ in the local network on the windows 7 system
     print ("connected ok")
+
+    #binding websocket to QQ  in order to send message
     qq=MyQQ()
     qq.setWS(ws)
     qq.addPerson(397916230)
     qq.sendperMsg(397916230,"hello 你")
 
-    wslisten = websocket.WebSocketApp(wsaddr,on_message=on_message)
-    #ws.connect("ws://192.168.1.142:25303/") #run coolQ in the local network on the windows 7 system
-    process = multiprocessing.Process(target=wslisten.run_forever,args=())
+    #Daemon1:wslistener is another porcess in order to listen to all the message from private and group
+    wslistener = websocket.WebSocketApp(wsaddr,on_message=on_message)
+    process = multiprocessing.Process(target=wslistener.run_forever,args=())
     process.start()
+
+    #Daemon2:checkmsgpool is another process in order to check out the message pool,if  not empyt ,than send it to the destination
+    #use this daemon process to response to the received message
     checkpro = multiprocessing.Process(target=checkmsgpool,args=(qq,sendinfoPool))
     checkpro.start()
-    #wslisten.run_forever()
+
+
 
     while True:
         time.sleep(3)
