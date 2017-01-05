@@ -165,7 +165,11 @@ def checkmsgpool(qq,msgpool):
             tmpmsg=msgpool.pop()
             qq.sendperMsg(397916230,tmpmsg)
 
-
+def alwaysOnline(wsaddr,on_message):
+    while True:
+        wslistener = websocket.WebSocketApp(wsaddr,on_message=on_message)
+        wslistener.run_forever()
+        print ("try again")
 
 from getWSaddr import getWSaddr
 if __name__ == '__main__':
@@ -183,8 +187,8 @@ if __name__ == '__main__':
     qq.sendperMsg(397916230,"hello 你")
 
     #Daemon1:wslistener is another porcess in order to listen to all the message from private and group
-    wslistener = websocket.WebSocketApp(wsaddr,on_message=on_message)
-    process = multiprocessing.Process(target=wslistener.run_forever,args=())
+    #wslistener = websocket.WebSocketApp(wsaddr,on_message=on_message)
+    process = multiprocessing.Process(target=alwaysOnline,args=(wsaddr,on_message))
     process.start()
 
     #Daemon2:checkmsgpool is another process in order to check out the message pool,if  not empyt ,than send it to the destination
